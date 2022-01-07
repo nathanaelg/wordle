@@ -1,20 +1,23 @@
 use std::collections::HashSet;
 
-fn evaluate_guess(guess: &str, correct: &str) -> [char; 5]
+fn evaluate_guess(guess: &Vec<char>, correct: &Vec<char>) -> Vec<char>
 {
-    let mut greens = ['\0', '\0', '\0', '\0', '\0'];
-    for (i, c) in correct.chars().enumerate() {
-        if c == guess.chars().nth(i).unwrap()
+    let mut greens = vec!['\0'; 5];
+
+    let it = correct.iter().zip(guess.iter());
+
+    for (i, (c, g)) in it.enumerate() {
+        if *c == *g
         {
-            greens[i] = c;
+            greens[i] = *c;
         }
     }
     return greens;
 }
 
 fn main() {
-    let mut greens = ['\0', '\0', '\0', '\0', '\0'];
-    let mut yellows = [HashSet::with_capacity(10), HashSet::with_capacity(10), HashSet::with_capacity(10), HashSet::with_capacity(10), HashSet::with_capacity(10)];
+    let mut greens = vec!['\0'; 5];
+    let mut yellows = vec![HashSet::with_capacity(10); 5];
     let mut greys = HashSet::with_capacity(26);
 
     yellows[0].insert('i');
@@ -47,7 +50,7 @@ fn main() {
     let correct = String::from("banal");
     let guess = String::from("candy");
 
-    greens = evaluate_guess(&guess, &correct);
+    greens = evaluate_guess(&guess.chars().collect(), &correct.chars().collect());
 
     println!("Green: {:?}", greens);
     println!("Yellow: {:?}", yellows);
