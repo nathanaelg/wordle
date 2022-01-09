@@ -1,4 +1,8 @@
+use std::collections::HashMap;
 use std::collections::HashSet;
+use std::fs::File;
+use std::io::prelude::*;
+use std::io::BufReader;
 use std::ops;
 
 struct Guess {
@@ -105,32 +109,100 @@ impl ops::Add<Guess> for Guess {
 }
 
 fn main() {
-    let correct = String::from("slump");
+    let file = File::open("words.txt").unwrap();
+    let words: Vec<String> = BufReader::new(file)
+        .lines()
+        .collect::<Result<_, _>>()
+        .unwrap();
+    // println!("{:?}", words);
 
-    let guess1 = String::from("raise");
-    let mut guess_eval = evaluate_guess(guess1.chars().collect(), correct.chars().collect());
-    println!("Green: {:?}", guess_eval.green);
-    println!("Yellow: {:?}", guess_eval.yellow);
-    println!("Grey: {:?}", guess_eval.grey);
+    // let correct = words.iter().find(|&w| w == "crank").unwrap();
+    let mut correct_words = 1;
+    let mut guess_statistics: HashMap<usize, usize> = HashMap::with_capacity(10);
 
-    let guess2 = String::from("snout");
-    assert!(possible_word(guess2.chars().collect(), &guess_eval));
-    guess_eval = guess_eval + evaluate_guess(guess2.chars().collect(), correct.chars().collect());
-    println!("Green: {:?}", guess_eval.green);
-    println!("Yellow: {:?}", guess_eval.yellow);
-    println!("Grey: {:?}", guess_eval.grey);
+    for correct in &words {
+        println!("Word {:?}: {:?}", correct_words, correct);
+        correct_words += 1;
 
-    let guess3 = String::from("sully");
-    assert!(possible_word(guess3.chars().collect(), &guess_eval));
-    guess_eval = guess_eval + evaluate_guess(guess3.chars().collect(), correct.chars().collect());
-    println!("Green: {:?}", guess_eval.green);
-    println!("Yellow: {:?}", guess_eval.yellow);
-    println!("Grey: {:?}", guess_eval.grey);
+        let mut guesses = 1;
+        let mut guess = words.iter().find(|&w| w == "raise").unwrap();
+        let mut guess_eval = evaluate_guess(guess.chars().collect(), correct.chars().collect());
+        // println!("Green: {:?}", guess_eval.green);
+        // println!("Yellow: {:?}", guess_eval.yellow);
+        // println!("Grey: {:?}", guess_eval.grey);
 
-    let guess4 = String::from("slump");
-    assert!(possible_word(guess4.chars().collect(), &guess_eval));
-    guess_eval = guess_eval + evaluate_guess(guess4.chars().collect(), correct.chars().collect());
-    println!("Green: {:?}", guess_eval.green);
-    println!("Yellow: {:?}", guess_eval.yellow);
-    println!("Grey: {:?}", guess_eval.grey);
+        let mut remaining: Vec<&String> = words
+            .iter()
+            .filter(|w| possible_word(w.chars().collect(), &guess_eval))
+            .collect();
+        println!("Guess {:?}: {:?} [{:?}]", guesses, guess, remaining.len());
+        // println!("{:?}", remaining);
+
+        while guess != correct {
+            let mut counts: HashMap<&String, usize> = HashMap::with_capacity(remaining.len());
+
+            for possible_guess in &remaining {
+                for possible_correct in &remaining {
+                    let possible_guess_eval = evaluate_guess(
+                        possible_guess.chars().collect(),
+                        possible_correct.chars().collect(),
+                    );
+                    let possible_remaining: Vec<_> = remaining
+                        .iter()
+                        .filter(|&w| possible_word(w.chars().collect(), &possible_guess_eval))
+                        .collect();
+                    let count = counts.entry(possible_guess).or_insert(0);
+                    *count += possible_remaining.len();
+                }
+            }
+            // println!("{:?}", counts);
+
+            guess = counts.iter().min_by_key(|c| c.1).unwrap().0;
+            guesses += 1;
+
+            guess_eval =
+                guess_eval + evaluate_guess(guess.chars().collect(), correct.chars().collect());
+            // println!("Green: {:?}", guess_eval.green);
+            // println!("Yellow: {:?}", guess_eval.yellow);
+            // println!("Grey: {:?}", guess_eval.grey);
+
+            remaining = words
+                .iter()
+                .filter(|w| possible_word(w.chars().collect(), &guess_eval))
+                .collect();
+            println!("Guess {:?}: {:?} [{:?}]", guesses, guess, remaining.len());
+        }
+
+        let guess_statistic = guess_statistics.entry(guesses).or_insert(0);
+        *guess_statistic += 1;
+
+        println!("{:?}", guess_statistics);
+    }
 }
+
+// let guess2 = String::from("snout");
+// assert!(possible_word(guess2.chars().collect(), &guess_eval));
+// guess_eval = guess_eval + evaluate_guess(guess2.chars().collect(), correct.chars().collect());
+// println!("Green: {:?}", guess_eval.green);
+// println!("Yellow: {:?}", guess_eval.yellow);
+// println!("Grey: {:?}", guess_eval.grey);
+
+// let guess3 = String::from("sully");
+// assert!(possible_word(guess3.chars().collect(), &guess_eval));
+// guess_eval = guess_eval + evaluate_guess(guess3.chars().collect(), correct.chars().collect());
+// println!("Green: {:?}", guess_eval.green);
+// println!("Yellow: {:?}", guess_eval.yellow);
+// println!("Grey: {:?}", guess_eval.grey);
+
+// let guess4 = String::from("slump");
+// assert!(possible_word(guess4.chars().collect(), &guess_eval));
+// guess_eval = guess_eval + evaluate_guess(guess4.chars().collect(), correct.chars().collect());
+// println!("Green: {:?}", guess_eval.green);
+// println!("Yellow: {:?}", guess_eval.yellow);
+// println!("Grey: {:?}", guess_eval.grey);
+
+// Wordle 203 3/6
+
+// 🟨🟨⬜⬜⬜
+// 🟨🟨⬜🟨🟨
+// 🟩🟩🟩🟩🟩
