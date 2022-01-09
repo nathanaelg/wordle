@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::collections::HashSet;
+use std::env;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
@@ -154,18 +155,22 @@ impl ops::Add<Guess> for Guess {
 }
 
 fn main() {
+    let args: Vec<String> = env::args().collect();
+
     let file = File::open("words.txt").unwrap();
     let words: Vec<String> = BufReader::new(file)
         .lines()
         .collect::<Result<_, _>>()
         .unwrap();
-    // println!("{:?}", words);
-
-    // let correct = words.iter().find(|&w| w == "crank").unwrap();
+    let correct_words_list: Vec<_> = if args.len() == 2 {
+        words.iter().filter(|w| **w == args[1]).collect()
+    } else {
+        words.iter().collect()
+    };
     let mut correct_words = 1;
     let mut guess_statistics: HashMap<usize, usize> = HashMap::with_capacity(10);
 
-    for correct in &words {
+    for correct in correct_words_list {
         println!("Word {:?}: {}", correct_words, correct);
         correct_words += 1;
 
@@ -190,7 +195,6 @@ fn main() {
             )),
             remaining.len()
         );
-        // println!("{:?}", remaining);
 
         while guess != correct {
             let mut counts: HashMap<&String, usize> = HashMap::with_capacity(remaining.len());
