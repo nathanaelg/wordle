@@ -10,7 +10,7 @@ From the set of remaining words, select the guess which will result in the small
 $ cargo build --release
 
 # Run with single word
-$ target/debug/wordle-rust gorge
+$ target/release/wordle-rust gorge
 Word 1: gorge
 Guess 1: raise 🟨⬜⬜⬜🟩 [40]
 Guess 2: prove ⬜🟨🟨⬜🟩 [7]
@@ -19,7 +19,7 @@ Guess 4: gorge 🟩🟩🟩🟩🟩 [1]
 Guess statistics: {4: 1}
 
 # Run through all 2315 words
-$ target/debug/wordle-rust
+$ target/release/wordle-rust
 Word 1: aback
 Guess 1: raise ⬜🟨⬜⬜⬜ [92]
 Guess 2: cloak 🟨⬜⬜🟨🟩 [4]
